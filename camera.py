@@ -5,11 +5,13 @@ from pycoral.adapters import common
 from pycoral.adapters import detect
 from pycoral.utils.dataset import read_label_file
 from pycoral.utils.edgetpu import make_interpreter
+from PIL import Image
 
 def draw_boxes(img, objects):
     if objects:
         for obj in objects:
-            print(obj)
+            x1,y1,x2,y2 = obj.bbox
+            cv2.rectangle(img, (x1,y1),(x2,y2),(0,0,255),2)
 
 
 
@@ -62,16 +64,16 @@ try:
         # Convert images to numpy arrays
         depth_image = np.asanyarray(depth_frame.get_data())
         color_image = np.asanyarray(color_frame.get_data())
-
-        _, scale = common.set_resized_input(interpreter, (640,480), lambda size: cv2.resize(color_frame,size))
-        interpreter.invoke()
-        objects = detect.get_objects(interpreter, 0.5, scale)
-        draw_boxes(color_frame,objects)
-        # Apply colormap on depth image (image must be converted to 8-bit per pixel first)
         depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.03), cv2.COLORMAP_JET)
-
         depth_colormap_dim = depth_colormap.shape
         color_colormap_dim = color_image.shape
+
+        _, scale = common.set_resized_input(interpreter, (640,480), lambda size: cv2.resize(color_image, size))
+        interpreter.invoke()
+        objects = detect.get_objects(interpreter, 0.5, scale)
+        draw_boxes(color_image,objects)
+        # Apply colormap on depth image (image must be converted to 8-bit per pixel first)
+
 
         # If depth and color resolutions are different, resize color image to match depth image for display
         if depth_colormap_dim != color_colormap_dim:
