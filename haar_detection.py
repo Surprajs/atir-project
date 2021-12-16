@@ -3,7 +3,7 @@ import numpy as np
 import time
 import pyrealsense2 as rs
 
-haar_cascade = cv2.CascadeClassifier('haar_face.xml')
+haar_cascade = cv2.CascadeClassifier('models/haar_face.xml')
 
 pipeline = rs.pipeline()
 config = rs.config()
