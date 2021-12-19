@@ -64,6 +64,7 @@ profile = pipeline.start(config)
 align_to = rs.stream.color
 align = rs.align(align_to)
 
+ptu = PTUController(WIDTH,HEIGHT)
 
 try:
     while True:
@@ -84,7 +85,11 @@ try:
         objects = detect.get_objects(interpreter, 0.5, scale)
         
         draw_boxes(color_image,depth_frame, objects, args.depth)
-
+        
+        if objects:
+            obj = objects[0]
+            x1,y1,x2,y2 = obj.bbox
+            ptu.track((x2+x1)/2, (y2+y1)/2)
         
         # Show images
         cv2.namedWindow('RealSense', cv2.WINDOW_AUTOSIZE)
