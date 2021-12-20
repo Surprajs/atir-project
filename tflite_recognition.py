@@ -26,10 +26,26 @@ def check_depth(x1,x2,y1,y2,depth_frame):
     except Exception as e:
         return False
 
-def draw_boxes(color_img,depth_frame, objects, depth, recognition_model):
+def draw_boxes(color_img,depth_frame, objects, depth, recognition_model, embeds):
     if objects:
+        
+        #
+        
+        #print(embed)
         for obj in objects:
             x1,y1,x2,y2 = obj.bbox
+            w = x2-x1; h = y2-y1
+            face = color_img[y1+h//10:y2-h//10,x1+w//10:x2-w//10]
+            mean, std = np.mean(face), np.std(face)
+            face = (face-mean)/std
+            face = cv2.resize(face, (160,160))
+            sample = np.expand_dims(face, axis=0)
+            common.set_input(recognition_model, sample)
+            recognition_model.invoke()
+            embed = common.output_tensor(recognition_model, 0)
+            print([np.linalg.norm(embed-em) for em in embeds])
+            
+            cv2.imshow("test",face)
             if depth:
                 if check_depth(x1,x2,y1,y2,depth_frame):
                     cv2.rectangle(color_img, (x1,y1),(x2,y2),(0,0,255),2)
@@ -40,11 +56,19 @@ parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFo
 parser.add_argument('--depth',type=bool,default=False,help='Use depth when detecting faces')
 args = parser.parse_args()
             
-
+with np.load("mean_embeddings.npz") as data:
+    embed_michal, embed_milosz = data["embed_michal"], data["embed_milosz"]
+    
+embeds = [embed_michal, embed_milosz]
 
 #create the model
 interpreter_detect = make_interpreter("models/ssd_mobilenet_v2_face_quant_postprocess_edgetpu.tflite")
 interpreter_detect.allocate_tensors()
+
+interpreter_recognize = make_interpreter("models/facenet_keras_edgetpu.tflite")
+interpreter_recognize.allocate_tensors()
+labels = read_label_file("models/label.txt")
+print(labels)
 # Configure depth and color streams
 pipeline = rs.pipeline()
 config = rs.config()
@@ -82,7 +106,7 @@ try:
         interpreter_detect.invoke()
         objects = detect.get_objects(interpreter_detect, 0.5, scale)
         
-        draw_boxes(color_image,depth_frame, objects, args.depth)
+        draw_boxes(color_image,depth_frame, objects, args.depth, interpreter_recognize, embeds)
 
         
         # Show images
