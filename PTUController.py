@@ -6,9 +6,11 @@ class PTUController:
     def __init__(self, WIDTH, HEIGHT):
         self.width = WIDTH/2
         self.height = HEIGHT/2
-        self.treshold = 100
+        self.treshold = 75
         self.dutyX = 7
         self.dutyY = 7
+        self.TickX = 42
+        self.TickY = 52
         GPIO.setmode(GPIO.BOARD)
         GPIO.setup(12,GPIO.OUT)
         GPIO.setup(33,GPIO.OUT)
@@ -16,6 +18,8 @@ class PTUController:
         self.servoY = GPIO.PWM(33,50)
         self.servoX.start(0)
         self.servoY.start(0)
+        
+        
         
     def __del__(self):
         self.servoX.stop()
@@ -29,81 +33,30 @@ class PTUController:
     
     def track(self, posX, posY):
         startTime = self.current_milli_time()
-        margin = 30
+        x = (self.width - posX)//self.TickX
+        y = (self.height - posY)//self.TickY
         
-        print(posX, posY)
-        print(self.width - posX)
+        self.dutyX += (0.25*x) 
+        if self.dutyX > 12:
+            self.dutyX = 12
+        elif self.dutyX < 2:
+            self.dutyX = 2
 
-        #180
-        if self.width - posX > margin:
-            self.dutyX += 0.5
-            if self.dutyX < 12:
-                self.servoX.ChangeDutyCycle(self.dutyX)
-            else:
-                self.dutyX = 12
-            
 
-            
-        if self.width - posX < -margin:
-            self.dutyX -= 0.5
-            if self.dutyX > 2:
-                self.servoX.ChangeDutyCycle(self.dutyX)
-            else:
-                self.dutyX = 2
-            
-            
-        if self.height - posY < -margin:
-            self.dutyY += 1
-            if self.dutyY < 10:
-                self.servoY.ChangeDutyCycle(self.dutyY)
-            else:
-                self.dutyY = 10
-            
-        
-            
-        if self.height - posY > margin:
-            self.dutyY -= 1
-            if self.dutyY > 4:
-                self.servoY.ChangeDutyCycle(self.dutyY)
-            else:
-                self.dutyY = 4    
-        
-        
-        
-        #360
-        #if self.width - posX > margin:
-        #    self.dutyX = 6.5
-        #    self.servoX.ChangeDutyCycle(self.dutyX)
-        #    print("pierwszy")
+        self.dutyY -= (0.25*y) 
+        if self.dutyY > 10:
+            self.dutyY = 10
+        elif self.dutyY < 4:
+            self.dutyY = 4
 
-            
-        #if self.width - posX < -margin:
-        #    self.dutyX = 7.5
-        #    self.servoX.ChangeDutyCycle(self.dutyX)
-        #    print("drugi")
-
-            
-        #if self.height - posY > margin:
-        #    self.dutyY = 8
-
-            
-        #if self.height - posY < margin:
-        #    self.dutyY = 6
-
-            
-        
-        #self.servoY.ChangeDutyCycle(self.dutyY)
-        
+        self.servoY.ChangeDutyCycle(self.dutyY)    
+        self.servoX.ChangeDutyCycle(self.dutyX)
+               
         while self.current_milli_time() - startTime <= self.treshold:
             pass
             
         self.servoX.ChangeDutyCycle(0)
         self.servoY.ChangeDutyCycle(0)
-        #self.servoY.stop()
-            
-        #endTime = self.current_milli_time()
-        #while self.current_milli_time() - endTime <= 100:
-        #    pass
         
         
         

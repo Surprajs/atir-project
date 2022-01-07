@@ -19,7 +19,7 @@ people = list(set(os.listdir(r'Faces')) - {'desktop.ini', 'whatever.ini'})
 print(f'Detected folders: {people}')
 
 # Loading Haar Cascades for facial detection required to perform model training
-haar_cascade = cv2.CascadeClassifier('haar_face.xml')
+haar_cascade = cv2.CascadeClassifier('models/haar_face.xml')
 
 # Creates empty arrays that will be filled with data patterns for each person's face (label)
 features = []

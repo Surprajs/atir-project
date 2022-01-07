@@ -35,7 +35,7 @@ def draw_boxes(color_img,depth_frame, objects, depth, recognition_model, embeds)
         for obj in objects:
             x1,y1,x2,y2 = obj.bbox
             w = x2-x1; h = y2-y1
-            face = color_img[y1+h//10:y2-h//10,x1+w//10:x2-w//10]
+            face = color_img[y1+h//5:y2-h//5,x1+w//5:x2-w//5]
             mean, std = np.mean(face), np.std(face)
             face = (face-mean)/std
             face = cv2.resize(face, (160,160))
@@ -43,14 +43,21 @@ def draw_boxes(color_img,depth_frame, objects, depth, recognition_model, embeds)
             common.set_input(recognition_model, sample)
             recognition_model.invoke()
             embed = common.output_tensor(recognition_model, 0)
-            print([np.linalg.norm(embed-em) for em in embeds])
-            
+            #print(embed)
+            #print([np.linalg.norm(embed-em) for em in embeds])
+            diff = [np.linalg.norm(embed-em) for em in embeds][0]
+            print(diff)
             cv2.imshow("test",face)
             if depth:
                 if check_depth(x1,x2,y1,y2,depth_frame):
                     cv2.rectangle(color_img, (x1,y1),(x2,y2),(0,0,255),2)
             else:
-                cv2.rectangle(color_img, (x1,y1),(x2,y2),(0,0,255),2)
+                if diff < 11.5:
+                    cv2.rectangle(color_img, (x1,y1),(x2,y2),(0,0,255),2)
+                    cv2.putText(color_img, 'other', (x1+10,y1-10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
+                else:
+                    cv2.rectangle(color_img, (x1,y1),(x2,y2),(0,255,0),2)
+                    cv2.putText(color_img, 'piechowski', (x1+10,y1-10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2)
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('--depth',type=bool,default=False,help='Use depth when detecting faces')
@@ -58,17 +65,16 @@ args = parser.parse_args()
             
 with np.load("mean_embeddings.npz") as data:
     embed_michal, embed_milosz = data["embed_michal"], data["embed_milosz"]
-    
+embed_milosz = embed_milosz+1
 embeds = [embed_michal, embed_milosz]
-
+print(np.linalg.norm(embed_michal-embed_milosz))
 #create the model
 interpreter_detect = make_interpreter("models/ssd_mobilenet_v2_face_quant_postprocess_edgetpu.tflite")
 interpreter_detect.allocate_tensors()
 
-interpreter_recognize = make_interpreter("models/facenet_keras_edgetpu.tflite")
+interpreter_recognize = make_interpreter("models/facenet_keras_edgetpu2.tflite")
 interpreter_recognize.allocate_tensors()
-labels = read_label_file("models/label.txt")
-print(labels)
+
 # Configure depth and color streams
 pipeline = rs.pipeline()
 config = rs.config()

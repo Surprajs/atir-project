@@ -2,21 +2,21 @@
 
 The goal is to detect a face in each frame and to identify what person said face belongs to."""
 
-import cv2.cv2 as cv2
+import cv2
 import numpy as np
 import os
 import time
 
-haar_cascade = cv2.CascadeClassifier('haar_face.xml')
+haar_cascade = cv2.CascadeClassifier('models/haar_face.xml')
 
 people = list(set(os.listdir(r'Faces')) - {'desktop.ini', 'whatever.ini'})
 print(f'Detected folders: {people}')
 
-features = np.load('features.npy', allow_pickle=True)
-labels = np.load('labels.npy')
+features = np.load('models/features.npy', allow_pickle=True)
+labels = np.load('models/labels.npy')
 
 face_recognizer = cv2.face.LBPHFaceRecognizer_create()
-face_recognizer.read('face_trained.yml')
+face_recognizer.read('models/face_trained.yml')
 
 capture = cv2.VideoCapture(0)
 

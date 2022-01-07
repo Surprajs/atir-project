@@ -43,7 +43,7 @@ def load_dataset(directory):
     return np.asarray(dataset), np.asarray(labels)
 
 def get_embedding(face):
-    model = make_interpreter("models/facenet_keras_edgetpu.tflite")
+    model = make_interpreter("models/facenet_keras_edgetpu2.tflite")
     model.allocate_tensors()
     mean, std = np.mean(face), np.std(face)
     standard_face = (face-mean)/std
@@ -51,21 +51,30 @@ def get_embedding(face):
     common.set_input(model, sample)
     model.invoke()
     embed = common.output_tensor(model, 0)
+    print("here")
     return embed
 
 
 
 train_faces, train_labels = load_dataset("data")
 
+
+
 new_train_faces = list()
 for face in train_faces:
     embedding = get_embedding(face)
     new_train_faces.append(embedding)
-    # print(face)
-new_train_faces = np.asarray(new_train_faces)
-
+print("before")
+#print(new_train_faces)
+#new_train_faces = np.array([embed for embed in new_train_faces])
+print("after")
+#print(train_labels)
 embed_michal = np.mean([face for face,label in zip(new_train_faces, train_labels) if label == "piechowski"], axis=0)
+print(embed_michal)
 embed_milosz = np.mean([face for face,label in zip(new_train_faces, train_labels) if label == "werner"], axis=0)
-
-np.savez_compressed("atir_embeddings.npz", new_train_faces=new_train_faces, train_labels=train_labels)
+print(embed_milosz)
+#np.savez_compressed("atir_embeddings.npz", new_train_faces=new_train_faces[0], train_labels=train_labels)
 np.savez_compressed("mean_embeddings.npz", embed_michal=embed_michal, embed_milosz=embed_milosz)
+print("kurwa")
+#np.savez_compressed("mean_embeddings.npz", embed_michal=embed_michal)#, embed_milosz=embed_milosz)
+

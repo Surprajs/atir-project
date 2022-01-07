@@ -22,11 +22,12 @@ def check_depth(x1,x2,y1,y2,depth_frame):
         depth_arr = np.array([[depth_frame.get_distance(x,y) for x in range (nx1,nx2+1)] for y in range(ny1,ny2+1)])
         avg = np.mean(depth_arr[depth_arr!=0])
         flat_factor = abs(np.sum((depth_arr[depth_arr!=0]-avg)*abs(depth_arr[depth_arr!=0]-avg))/len(depth_arr[depth_arr!=0]))
+        print(flat_factor)
         return flat_factor > 1e-4
     except Exception as e:
         return False
 
-def draw_boxes(color_img,depth_frame, objects, depth, recognition_model):
+def draw_boxes(color_img,depth_frame, objects, depth):
     if objects:
         for obj in objects:
             x1,y1,x2,y2 = obj.bbox
