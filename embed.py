@@ -12,7 +12,9 @@ def extract_face(filename, detector, size=(160,160)):
     objects = detect.get_objects(detector, 0.0, scale)
     if objects:
         x1,y1,x2,y2 = objects[0].bbox        
-        face = img[y1:y2,x1:x2]
+        #face = img[y1:y2,x1:x2]
+        w = x2-x1; h = y2-y1
+        face = img[y1+h//5:y2-h//5,x1+w//5:x2-w//5]
         print(filename)
         return cv2.resize(face, size)
     else:
@@ -43,10 +45,11 @@ def load_dataset(directory):
     return np.asarray(dataset), np.asarray(labels)
 
 def get_embedding(face):
-    model = make_interpreter("models/facenet_keras_edgetpu2.tflite")
+    model = make_interpreter("models/new_facenet_keras_edgetpu.tflite")
     model.allocate_tensors()
-    mean, std = np.mean(face), np.std(face)
-    standard_face = (face-mean)/std
+    #mean, std = np.mean(face), np.std(face)
+    #standard_face = (face-mean)/std
+    standard_face = face
     sample = np.expand_dims(standard_face, axis=0)
     common.set_input(model, sample)
     model.invoke()
@@ -56,7 +59,7 @@ def get_embedding(face):
 
 
 
-train_faces, train_labels = load_dataset("data")
+train_faces, train_labels = load_dataset("dataset")
 
 
 
@@ -64,17 +67,17 @@ new_train_faces = list()
 for face in train_faces:
     embedding = get_embedding(face)
     new_train_faces.append(embedding)
-print("before")
+#print("before")
 #print(new_train_faces)
 #new_train_faces = np.array([embed for embed in new_train_faces])
-print("after")
+#print("after")
 #print(train_labels)
 embed_michal = np.mean([face for face,label in zip(new_train_faces, train_labels) if label == "piechowski"], axis=0)
 print(embed_michal)
-embed_milosz = np.mean([face for face,label in zip(new_train_faces, train_labels) if label == "werner"], axis=0)
-print(embed_milosz)
+#embed_milosz = np.mean([face for face,label in zip(new_train_faces, train_labels) if label == "werner"], axis=0)
+#print(embed_milosz)
 #np.savez_compressed("atir_embeddings.npz", new_train_faces=new_train_faces[0], train_labels=train_labels)
-np.savez_compressed("mean_embeddings.npz", embed_michal=embed_michal, embed_milosz=embed_milosz)
+np.savez_compressed("mean_embeddings.npz", embed_michal=embed_michal)
 print("kurwa")
 #np.savez_compressed("mean_embeddings.npz", embed_michal=embed_michal)#, embed_milosz=embed_milosz)
 
