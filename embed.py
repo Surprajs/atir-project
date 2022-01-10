@@ -19,7 +19,7 @@ def extract_face(filename, detector, size=(160,160)):
         return cv2.resize(face, size)
     else:
         return []
-def load_faces(directory, detector, extension="jpg"):
+def load_faces(directory, detector):
     faces = list()
     images = glob(f"{directory}/*")
     for image in images:
