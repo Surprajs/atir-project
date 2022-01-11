@@ -20,6 +20,9 @@ face_recognizer.read('face_trained.yml')
 
 capture = cv2.VideoCapture(0)
 
+capture.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+
 scale_ratio = 4
 
 prev_frame_time = 0
@@ -42,7 +45,7 @@ while capture.isOpened():
     cv2.putText(frame, fps, (10, 20), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 255, 0), thickness=1)
 
     # Detect the face in the frame
-    faces_rect = haar_cascade.detectMultiScale(gray, 1.1, 4)
+    faces_rect = haar_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=6, minSize=(100, 100))
 
     for (x, y, w, h) in faces_rect:
         faces_roi = gray[y:y + h, x:x + w]
@@ -65,7 +68,10 @@ while capture.isOpened():
                 cv2.putText(frame, str(people[label]), (x, y - 10), cv2.FONT_HERSHEY_COMPLEX, 0.5, (255, 255, 0),
                             thickness=1)
                 cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 255, 0), thickness=1)
-
+            if str(people[label]) == "Michal Piechowski":
+                cv2.putText(frame, str(people[label]), (x, y - 10), cv2.FONT_HERSHEY_COMPLEX, 0.5, (255, 0, 255),
+                            thickness=1)
+                cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 255), thickness=1)
         else:
             cv2.putText(frame, f'Person', (x, y - 10), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 255, 0), thickness=1)
             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), thickness=1)
