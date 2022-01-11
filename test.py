@@ -7,9 +7,11 @@ from pycoral.utils.edgetpu import make_interpreter
 
 def extract_face(img, detector, size=(160,160)):
     #img = cv2.imread(filename)
-    _, scale = common.set_resized_input(detector, (1080,720), lambda size: cv2.resize(img, size))
+    h,w = img.shape[:-1]
+    print(h,w)
+    _, scale = common.set_resized_input(detector, (w,h), lambda size: cv2.resize(img, size))
     detector.invoke()
-    objects = detect.get_objects(detector, 0.0, scale)
+    objects = detect.get_objects(detector, 0.5, scale)
     if objects:
         x1,y1,x2,y2 = objects[0].bbox        
         #face = img[y1:y2,x1:x2]
@@ -38,7 +40,10 @@ def get_embedding(face):
     common.set_input(model, sample)
     model.invoke()
     embed = common.output_tensor(model, 0)
-    print("here")
+    #print("here")
+    embed = embed[0]
+    print(embed[-5:])
+    print(np.min(embed), np.max(embed))
     return embed
 
 
@@ -50,6 +55,12 @@ milosz1 = cv2.imread("test/milosz1.jpg")
 milosz2 = cv2.imread("test/milosz2.jpg")
 michal1 = cv2.imread("test/michal1.jpg")
 michal2 = cv2.imread("test/michal2.jpg")
+#milosz1 = cv2.imread("test/test1.png")
+#milosz2 = cv2.imread("test/test2.png")
+#milosz1 = cv2.imread("test/camera1.png")
+#milosz2 = cv2.imread("test/camera3.png")
+michal1 = cv2.imread("test/test3.png")
+michal2 = cv2.imread("test/test4.png")
 
 
 images = [milosz1, milosz2, michal1, michal2]

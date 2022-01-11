@@ -26,41 +26,44 @@ def check_depth(x1,x2,y1,y2,depth_frame):
     except Exception as e:
         return False
 
-def draw_boxes(color_img,depth_frame, objects, depth, recognition_model, embeds):
-    if objects:
-        
-        #
-        
-        #print(embed)
-        for obj in objects:
-            x1,y1,x2,y2 = obj.bbox
-            w = x2-x1; h = y2-y1
-            face = color_img[y1+h//5:y2-h//5,x1+w//5:x2-w//5]
-            #face = color_img
-            #mean, std = np.mean(face), np.std(face)
-            #face = (face-mean)/std
-            face = cv2.resize(face, (160,160))
-            sample = np.expand_dims(face, axis=0)
-            common.set_input(recognition_model, sample)
-            recognition_model.invoke()
-            embed = common.output_tensor(recognition_model, 0)
-            #print(np.linalg.norm(embed))
-            #print([np.linalg.norm(embed-em) for em in embeds])
-            diff = np.linalg.norm(embeds-embed)
-            print(diff)
-            #diff = [np.linalg.norm(embed-em) for em in embeds][0]
-            #print(diff)
-            cv2.imshow("test",face)
-            if depth:
-                if check_depth(x1,x2,y1,y2,depth_frame):
+def draw_boxes(color_img,depth_frame, objects, depth, embeds):
+    try:
+        if objects:
+            for obj in objects:
+                x1,y1,x2,y2 = obj.bbox
+                w = x2-x1; h = y2-y1
+                face = color_img[y1+h//5:y2-h//5,x1+w//5:x2-w//5]
+                #face = color_img
+                #mean, std = np.mean(face), np.std(face)
+                #face = (face-mean)/std
+                face = face.astype("float32")
+                face = cv2.resize(face, (160,160))
+                sample = np.expand_dims(face, axis=0)
+                recognition_model = make_interpreter("models/new_facenet_keras_edgetpu.tflite")
+                recognition_model.allocate_tensors()
+                common.set_input(recognition_model, sample)
+                recognition_model.invoke()
+                embed = common.output_tensor(recognition_model, 0)[0]
+                #print(np.linalg.norm(embed))
+                #print([np.linalg.norm(embed-em) for em in embeds])
+                diff = np.linalg.norm(embeds-embed, ord=2)
+                print(diff)
+                #diff = [np.linalg.norm(embed-em) for em in embeds][0]
+                #print(diff)
+                print(embed)
+                cv2.imwrite("test.png", color_image)
+                if depth:
+                    if check_depth(x1,x2,y1,y2,depth_frame):
+                        cv2.rectangle(color_img, (x1,y1),(x2,y2),(0,0,255),2)
+                else:
+                    #if diff < 11.5:
                     cv2.rectangle(color_img, (x1,y1),(x2,y2),(0,0,255),2)
-            else:
-                #if diff < 11.5:
-                cv2.rectangle(color_img, (x1,y1),(x2,y2),(0,0,255),2)
-                cv2.putText(color_img, 'other', (x1+10,y1-10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
-                #else:
-                #    cv2.rectangle(color_img, (x1,y1),(x2,y2),(0,255,0),2)
-                #    cv2.putText(color_img, 'piechowski', (x1+10,y1-10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2)
+                    cv2.putText(color_img, 'other', (x1+10,y1-10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
+                    #else:
+                    #    cv2.rectangle(color_img, (x1,y1),(x2,y2),(0,255,0),2)
+                    #    cv2.putText(color_img, 'piechowski', (x1+10,y1-10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2)
+    except Exception as e:
+        print("error")
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('--depth',type=bool,default=False,help='Use depth when detecting faces')
@@ -68,6 +71,8 @@ args = parser.parse_args()
             
 with np.load("mean_embeddings.npz") as data:
     embed_michal = data["embed_michal"]
+embed_michal = embed_michal[0]
+print(embed_michal)
 #embed_milosz = embed_milosz+1
 #embeds = [embed_michal, embed_milosz]
 #print(np.linalg.norm(embed_michal-embed_milosz))
@@ -115,13 +120,12 @@ try:
         interpreter_detect.invoke()
         objects = detect.get_objects(interpreter_detect, 0.5, scale)
         
-        draw_boxes(color_image,depth_frame, objects, args.depth, interpreter_recognize, embed_michal)
-
+        draw_boxes(color_image,depth_frame, objects, args.depth, embed_michal)
         
         # Show images
         cv2.namedWindow('RealSense', cv2.WINDOW_AUTOSIZE)
         cv2.imshow('RealSense', color_image)
-        cv2.imwrite("test.png", color_image)
+        
         if cv2.waitKey(20) & 0xFF == ord('q'):
             break
 

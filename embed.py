@@ -55,11 +55,12 @@ def get_embedding(face):
     model.invoke()
     embed = common.output_tensor(model, 0)
     print("here")
+    print(embed)
     return embed
 
 
 
-train_faces, train_labels = load_dataset("dataset")
+train_faces, train_labels = load_dataset("dataset2")
 
 
 
@@ -72,7 +73,7 @@ for face in train_faces:
 #new_train_faces = np.array([embed for embed in new_train_faces])
 #print("after")
 #print(train_labels)
-embed_michal = np.mean([face for face,label in zip(new_train_faces, train_labels) if label == "piechowski"], axis=0)
+embed_michal = np.mean([face for face,label in zip(new_train_faces, train_labels) if label == "piechowski2"], axis=0)
 print(embed_michal)
 #embed_milosz = np.mean([face for face,label in zip(new_train_faces, train_labels) if label == "werner"], axis=0)
 #print(embed_milosz)
