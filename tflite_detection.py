@@ -3,7 +3,7 @@ import pyrealsense2 as rs
 import numpy as np
 import cv2
 from pycoral.adapters import common, detect, classify
-
+from time import time
 from pycoral.utils.dataset import read_label_file
 from pycoral.utils.edgetpu import make_interpreter
 from PTUController import PTUController
@@ -22,7 +22,7 @@ def check_depth(x1,x2,y1,y2,depth_frame):
         depth_arr = np.array([[depth_frame.get_distance(x,y) for x in range (nx1,nx2+1)] for y in range(ny1,ny2+1)])
         avg = np.mean(depth_arr[depth_arr!=0])
         flat_factor = abs(np.sum((depth_arr[depth_arr!=0]-avg)*abs(depth_arr[depth_arr!=0]-avg))/len(depth_arr[depth_arr!=0]))
-        print(flat_factor)
+        #print(flat_factor)
         return flat_factor > 1e-4
     except Exception as e:
         return False
@@ -64,10 +64,10 @@ profile = pipeline.start(config)
 align_to = rs.stream.color
 align = rs.align(align_to)
 
-
+fps_list = list()
 try:
     while True:
-
+        start = time()
         # Wait for a coherent pair of frames: depth and color
         frames = pipeline.wait_for_frames()
         aligned_frames = align.process(frames)
@@ -89,6 +89,12 @@ try:
         # Show images
         cv2.namedWindow('RealSense', cv2.WINDOW_AUTOSIZE)
         cv2.imshow('RealSense', color_image)
+        fps_list.append(1/(time()-start))
+        if len(fps_list) >= 100:
+            with open("fps/fps_tflite_det_depth.txt", "w") as file:
+                for fps in fps_list:
+                    file.write(f"{fps}\n")
+            break
         if cv2.waitKey(20) & 0xFF == ord('q'):
             break
 
