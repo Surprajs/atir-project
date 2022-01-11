@@ -51,11 +51,13 @@ def create_train():
 
             # Detecting the face in the photo
             gray = cv2.cvtColor(img_array, cv2.COLOR_BGR2GRAY)
-            faces_rect = haar_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=4)
+            faces_rect = haar_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=6, minSize=(100, 100))
 
             # Adding data to arrays within the detected face region
             for (x, y, w, h) in faces_rect:
                 faces_roi = gray[y:y + h, x:x + w]
+                cv2.imshow('face', faces_roi)
+                cv2.waitKey(1000)
                 features.append(faces_roi)
                 labels.append(label)
 
