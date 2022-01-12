@@ -2,26 +2,29 @@
 
 The goal is to detect a face in each frame and to identify what person said face belongs to."""
 
-import cv2
+import cv2.cv2 as cv2
 import numpy as np
 import os
 import time
 
-haar_cascade = cv2.CascadeClassifier('models/haar_face.xml')
+# Loading Haar Cascades for facial detection required to perform model training
+haar_cascade = cv2.CascadeClassifier('haar_face.xml')
 
+# Finds catalogued people found in a specified directory and prints them
 people = list(set(os.listdir(r'Faces')) - {'desktop.ini', 'whatever.ini'})
+people.sort()
 print(f'Detected folders: {people}')
 
-features = np.load('models/features.npy', allow_pickle=True)
-labels = np.load('models/labels.npy')
+features = np.load('features.npy', allow_pickle=True)
+labels = np.load('labels.npy')
 
 face_recognizer = cv2.face.LBPHFaceRecognizer_create()
-face_recognizer.read('models/face_trained.yml')
+face_recognizer.read('face_trained.yml')
 
 capture = cv2.VideoCapture(0)
 
-capture.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+capture.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
 scale_ratio = 4
 
@@ -72,6 +75,10 @@ while capture.isOpened():
                 cv2.putText(frame, str(people[label]), (x, y - 10), cv2.FONT_HERSHEY_COMPLEX, 0.5, (255, 0, 255),
                             thickness=1)
                 cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 255), thickness=1)
+            if str(people[label]) == "Michal Hadrysiak":
+                cv2.putText(frame, str(people[label]), (x, y - 10), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 255),
+                            thickness=1)
+                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), thickness=1)
         else:
             cv2.putText(frame, f'Person', (x, y - 10), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 255, 0), thickness=1)
             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), thickness=1)
