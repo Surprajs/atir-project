@@ -16,9 +16,10 @@ pipeline.start(config)
 fps_list = list()
 try:
     while True:
-        start = time()
+        
 
         frames = pipeline.wait_for_frames()
+        start = time()
         color_frame = frames.get_color_frame()
         color_image = np.asanyarray(color_frame.get_data())
         if not color_frame:

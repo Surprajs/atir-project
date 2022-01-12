@@ -7,7 +7,8 @@ import os
 haar_cascade = cv2.CascadeClassifier('models/haar_face.xml')
 features = np.load('models/features.npy', allow_pickle=True)
 labels = np.load('models/labels.npy')
-people = list(set(os.listdir(r'Faces')) - {'desktop.ini', 'whatever.ini'})
+people = list(set(os.listdir(r'Faces')) - {'desktop.ini', 'whatever.ini'}); people.sort()
+print(people)
 face_recognizer = cv2.face.LBPHFaceRecognizer_create()
 face_recognizer.read('models/face_trained.yml')
 pipeline = rs.pipeline()
@@ -21,9 +22,10 @@ fps_list = list()
 
 try:
     while True:
-        start = time()
+        #start = time()
 
         frames = pipeline.wait_for_frames()
+        start = time()
         color_frame = frames.get_color_frame()
         color_image = np.asanyarray(color_frame.get_data())
         if not color_frame:
@@ -39,35 +41,27 @@ try:
             confidence = 100 - loss_of_confidence
             if confidence < 0:
                 confidence = 0
-            #print(f'\rLabel = {people[label]} with confidence = {confidence}')
+            print(f'\rLabel = {people[label]} with confidence = {confidence}', end="")
 
             cv2.putText(color_image, f'{int(confidence)}%', (x - 40, y - 10), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 255, 0),
                     thickness=1)
-        
+            #print(label)
             if confidence > 30:
-                if str(people[label]) == "Michal Piechowski":
-                    cv2.putText(color_image, str(people[label]), (x, y - 10), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 255, 0),
-                            thickness=1)
-                    cv2.rectangle(color_image, (x, y), (x + w, y + h), (0,255,0), thickness=1)
-                elif str(people[label]) == "Ryan Gosling":
-                    cv2.putText(color_image, str(people[label]), (x, y - 10), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 255, 0),
-                            thickness=1)
-                    cv2.rectangle(color_image, (x, y), (x + w, y + h), (0,255,0), thickness=1)
-                elif str(people[label]) == "Milosz Werner":
-                    cv2.putText(color_image, str(people[label]), (x, y - 10), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 255, 0),
-                            thickness=1)
-                    cv2.rectangle(color_image, (x, y), (x + w, y + h), (0,255,0), thickness=1)
-
+                cv2.putText(color_image, str(people[label]), (x, y - 10), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 255, 0),
+                        thickness=1)
+                cv2.rectangle(color_image, (x, y), (x + w, y + h), (0,255,0), thickness=1)
             else:
                 cv2.putText(color_image, f'Person', (x, y - 10), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 255), thickness=1)
                 cv2.rectangle(color_image, (x, y), (x + w, y + h), (0, 0, 255), thickness=1)
         cv2.imshow('Detected Face', color_image)
         fps_list.append(1/(time()-start))
+        """
         if len(fps_list) >= 100:
-            with open("fps/fps_haar_rec.txt", "w") as file:
+            with open("fps/fps_haar_rec_2.txt", "w") as file:
                 for fps in fps_list:
                     file.write(f"{fps}\n")
-            break        
+            break
+        """
         if cv2.waitKey(20) & 0xFF == ord('q'):
             break
 finally:
