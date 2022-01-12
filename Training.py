@@ -9,6 +9,7 @@ import cv2.cv2 as cv2
 import numpy as np
 import time
 from datetime import timedelta
+from os.path import isfile
 
 # Starts a timer that will display total time elapsed at the end of the program
 start_time = time.monotonic()
@@ -16,10 +17,11 @@ start_time = time.monotonic()
 # Finds catalogued people found in a specified directory and prints them
 faces_dir = r'Faces'
 people = list(set(os.listdir(r'Faces')) - {'desktop.ini', 'whatever.ini'})
+people.sort()
 print(f'Detected folders: {people}')
 
 # Loading Haar Cascades for facial detection required to perform model training
-haar_cascade = cv2.CascadeClassifier('models/haar_face.xml')
+haar_cascade = cv2.CascadeClassifier('haar_face.xml')
 
 # Creates empty arrays that will be filled with data patterns for each person's face (label)
 features = []
@@ -57,7 +59,7 @@ def create_train():
             for (x, y, w, h) in faces_rect:
                 faces_roi = gray[y:y + h, x:x + w]
                 cv2.imshow('face', faces_roi)
-                cv2.waitKey(1000)
+                cv2.waitKey(100)
                 features.append(faces_roi)
                 labels.append(label)
 
@@ -87,7 +89,7 @@ face_recognizer = cv2.face.LBPHFaceRecognizer_create()
 face_recognizer.train(features, labels)
 
 # Removes the previously generated face recognition data
-if 'face_trained.yml':
+if isfile('face_trained.yml'):
     os.remove('face_trained.yml')
     os.remove('features.npy')
     os.remove('labels.npy')
