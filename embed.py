@@ -78,7 +78,7 @@ print(embed_michal)
 #embed_milosz = np.mean([face for face,label in zip(new_train_faces, train_labels) if label == "werner"], axis=0)
 #print(embed_milosz)
 #np.savez_compressed("atir_embeddings.npz", new_train_faces=new_train_faces[0], train_labels=train_labels)
-np.savez_compressed("mean_embeddings.npz", embed_michal=embed_michal)
+np.savez_compressed("mean_embeddings.npz", embed_michal=new_train_faces)
 print("kurwa")
 #np.savez_compressed("mean_embeddings.npz", embed_michal=embed_michal)#, embed_milosz=embed_milosz)
 

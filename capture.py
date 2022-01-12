@@ -43,7 +43,7 @@ try:
 
         cv2.namedWindow('RealSense', cv2.WINDOW_AUTOSIZE)
         cv2.imshow('RealSense', color_image)
-        cv2.imwrite("test.png", color_image)
+        #cv2.imwrite("test.png", color_image)
         if cv2.waitKey(20) & 0xFF == ord('q'):
             break
         elif cv2.waitKey(20) & 0xFF == ord('s'):
