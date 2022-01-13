@@ -14,10 +14,10 @@ system(f"mkdir -p dataset/{args.name}")
 pipeline = rs.pipeline()
 config = rs.config()
 
-WIDTH = 640
-HEIGHT = 480
+WIDTH = 1920
+HEIGHT = 1080
 
-config.enable_stream(rs.stream.depth, WIDTH, HEIGHT, rs.format.z16, 30)
+config.enable_stream(rs.stream.depth, 640,480, rs.format.z16, 30)
 config.enable_stream(rs.stream.color, WIDTH, HEIGHT, rs.format.bgr8, 30)
 
 
@@ -33,7 +33,7 @@ try:
 
         frames = pipeline.wait_for_frames()
         aligned_frames = align.process(frames)
-
+        aligned_frames = frames
         depth_frame = aligned_frames.get_depth_frame()
         color_frame = aligned_frames.get_color_frame()
         if not depth_frame or not color_frame:

@@ -6,11 +6,11 @@ class PTUController:
     def __init__(self, WIDTH, HEIGHT):
         self.width = WIDTH/2
         self.height = HEIGHT/2
-        self.treshold = 75
+        self.treshold = 100
         self.dutyX = 7
         self.dutyY = 7
-        self.TickX = 42
-        self.TickY = 52
+        self.TickX = 84
+        self.TickY = 78
         GPIO.setmode(GPIO.BOARD)
         GPIO.setup(12,GPIO.OUT)
         GPIO.setup(33,GPIO.OUT)
@@ -33,8 +33,8 @@ class PTUController:
     
     def track(self, posX, posY):
         startTime = self.current_milli_time()
-        x = (self.width - posX)//self.TickX
-        y = (self.height - posY)//self.TickY
+        x = int((self.width - posX)/self.TickX)
+        y = int((self.height - posY)/self.TickY)
         
         self.dutyX += (0.25*x) 
         if self.dutyX > 12:

@@ -22,8 +22,8 @@ def check_depth(x1,x2,y1,y2,depth_frame):
         depth_arr = np.array([[depth_frame.get_distance(x,y) for x in range (nx1,nx2+1)] for y in range(ny1,ny2+1)])
         avg = np.mean(depth_arr[depth_arr!=0])
         flat_factor = abs(np.sum((depth_arr[depth_arr!=0]-avg)*abs(depth_arr[depth_arr!=0]-avg))/len(depth_arr[depth_arr!=0]))
-        #print(flat_factor)
-        return flat_factor > 1e-4
+        print(flat_factor)
+        return flat_factor > 1e-5
     except Exception as e:
         return False
 
@@ -54,6 +54,7 @@ WIDTH = 640
 HEIGHT = 480
 
 config.enable_stream(rs.stream.depth, WIDTH, HEIGHT, rs.format.z16, 30)
+#config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
 config.enable_stream(rs.stream.color, WIDTH, HEIGHT, rs.format.bgr8, 30)
 
 
@@ -64,17 +65,21 @@ profile = pipeline.start(config)
 align_to = rs.stream.color
 align = rs.align(align_to)
 
-fps_list = list()
+FRAMES = 100
 try:
+    start = time()
+    counter = 0
     while True:
-        start = time()
+        counter += 1
         # Wait for a coherent pair of frames: depth and color
         frames = pipeline.wait_for_frames()
         aligned_frames = align.process(frames)
+        #aligned_frames = frames
 
         depth_frame = aligned_frames.get_depth_frame()
         color_frame = aligned_frames.get_color_frame()
         if not depth_frame or not color_frame:
+        #if not color_frame:
             continue
 
         color_image = np.asanyarray(color_frame.get_data())
@@ -89,16 +94,13 @@ try:
         # Show images
         cv2.namedWindow('RealSense', cv2.WINDOW_AUTOSIZE)
         cv2.imshow('RealSense', color_image)
-        fps_list.append(1/(time()-start))
-        if len(fps_list) >= 100:
-            with open("fps/fps_tflite_det_depth.txt", "w") as file:
-                for fps in fps_list:
-                    file.write(f"{fps}\n")
-            break
-        if cv2.waitKey(20) & 0xFF == ord('q'):
+
+        if counter == FRAMES:
+            total_time = time() - start
+            print(FRAMES/total_time)
+            #break
+        if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
 finally:
-
-    # Stop streaming
     pipeline.stop()

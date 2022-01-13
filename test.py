@@ -17,18 +17,12 @@ def extract_face(img, detector, size=(160,160)):
         #face = img[y1:y2,x1:x2]
         w = x2-x1; h = y2-y1
         face = img[y1+h//5:y2-h//5,x1+w//5:x2-w//5]
+        cv2.imshow("face", face)
+        cv2.waitKey(1000)
         #print(filename)
         return cv2.resize(face, size)
     else:
         return []
-def load_faces(directory, detector):
-    faces = list()
-    images = glob(f"{directory}/*")
-    for image in images:
-        face = extract_face(image, detector)
-        if np.any(face):
-            faces.append(face)
-    return faces
 
 def get_embedding(face):
     model = make_interpreter("models/new_facenet_keras_edgetpu.tflite")
@@ -51,20 +45,15 @@ def get_embedding(face):
 #train_faces, train_labels = load_dataset("dataset")
 
 
-milosz1 = cv2.imread("test/milosz1.jpg")
-milosz2 = cv2.imread("test/milosz2.jpg")
-michal1 = cv2.imread("test/michal1.jpg")
-michal2 = cv2.imread("test/michal2.jpg")
-#milosz1 = cv2.imread("test/test1.png")
-#milosz2 = cv2.imread("test/test2.png")
-#milosz1 = cv2.imread("test/camera1.png")
-#milosz2 = cv2.imread("test/camera3.png")
-michal1 = cv2.imread("test/test3.png")
-michal2 = cv2.imread("test/test4.png")
+piechowski1 = cv2.imread("test/piech_fhd_1.png")
+piechowski2 = cv2.imread("test/piech_fhd_2.png")
+hadrysiak1 = cv2.imread("test/hadr_fhd_1.png")
+hadrysiak2 = cv2.imread("test/hadr_fhd_2.png")
 
 
-images = [milosz1, milosz2, michal1, michal2]
-names2 = ["milosz1", "milosz2", "michal1","michal2"]
+
+images = [piechowski1,piechowski2,hadrysiak1,hadrysiak2]
+names2 = ["piechowski1","piechowski2","hadrysiak1","hadrysiak2"]
 
 detector = make_interpreter("models/ssd_mobilenet_v2_face_quant_postprocess_edgetpu.tflite")
 detector.allocate_tensors()
@@ -77,18 +66,7 @@ from itertools import combinations
 
 dists = [(name, np.linalg.norm(pair[0]-pair[1], ord=2)) for pair, name in zip(combinations(embeds,2), combinations(names2,2))]
 
-for dist2 in sorted(dists, key=lambda x: x[1]):
-    print(dist2)
-#print(new_train_faces)
-#new_train_faces = np.array([embed for embed in new_train_faces])
-#print("after")
-#print(train_labels)
-#embed_michal = np.mean([face for face,label in zip(new_train_faces, train_labels) if label == "piechowski"], axis=0)
-#print(embed_michal)
-#embed_milosz = np.mean([face for face,label in zip(new_train_faces, train_labels) if label == "werner"], axis=0)
-#print(embed_milosz)
-#np.savez_compressed("atir_embeddings.npz", new_train_faces=new_train_faces[0], train_labels=train_labels)
-#np.savez_compressed("mean_embeddings.npz", embed_michal=embed_michal)
-#print("kurwa")
-#np.savez_compressed("mean_embeddings.npz", embed_michal=embed_michal)#, embed_milosz=embed_milosz)
+for dist in sorted(dists, key=lambda x: x[1]):
+    print(dist)
+
 

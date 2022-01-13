@@ -4,6 +4,7 @@ import numpy as np
 from pycoral.adapters import common, detect, classify
 from pycoral.utils.edgetpu import make_interpreter
 
+counter = 0
 
 def extract_face(filename, detector, size=(160,160)):
     img = cv2.imread(filename)
@@ -54,13 +55,15 @@ def get_embedding(face):
     common.set_input(model, sample)
     model.invoke()
     embed = common.output_tensor(model, 0)
-    print("here")
-    print(embed)
+    global counter
+    counter += 1
+    print(counter)
+    #print(embed)
     return embed
 
 
 
-train_faces, train_labels = load_dataset("dataset2")
+train_faces, train_labels = load_dataset("dataset")
 
 
 
@@ -73,12 +76,13 @@ for face in train_faces:
 #new_train_faces = np.array([embed for embed in new_train_faces])
 #print("after")
 #print(train_labels)
-embed_michal = np.mean([face for face,label in zip(new_train_faces, train_labels) if label == "piechowski2"], axis=0)
-print(embed_michal)
+embed_piech = np.mean([face for face,label in zip(new_train_faces, train_labels) if label == "piechowski"], axis=0)
+embed_hadr = np.mean([face for face,label in zip(new_train_faces, train_labels) if label == "hadrysiak"], axis=0)
+
 #embed_milosz = np.mean([face for face,label in zip(new_train_faces, train_labels) if label == "werner"], axis=0)
 #print(embed_milosz)
 #np.savez_compressed("atir_embeddings.npz", new_train_faces=new_train_faces[0], train_labels=train_labels)
-np.savez_compressed("mean_embeddings.npz", embed_michal=new_train_faces)
+np.savez_compressed("embeddings.npz", embed_piech=embed_piech, embed_hadr=embed_hadr)
 print("kurwa")
 #np.savez_compressed("mean_embeddings.npz", embed_michal=embed_michal)#, embed_milosz=embed_milosz)
 
