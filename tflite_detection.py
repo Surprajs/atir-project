@@ -8,8 +8,9 @@ from pycoral.utils.dataset import read_label_file
 from pycoral.utils.edgetpu import make_interpreter
 from PTUController import PTUController
 
-def check_depth(x1,x2,y1,y2,depth_frame):
+def check_depth(x1,x2,y1,y2,depth_frame, color_img):
     try:
+        print("test")
         x12 = (x1+x2)//2
         y12 = (y1+y2)//2
         w = abs(x2-x1)
@@ -18,13 +19,20 @@ def check_depth(x1,x2,y1,y2,depth_frame):
         ny1 = y1+h//4
         nx2 = x2-w//4
         ny2 = y2-h//4
-        
+        cv2.rectangle(color_img, (nx1,ny1),(nx2,ny2),(0,0,255),2)
+        cv2.rectangle(color_img, (x1,y1),(x2,y2),(0,0,255),2)
+        cv2.imwrite("depth3.png",color_img)
         depth_arr = np.array([[depth_frame.get_distance(x,y) for x in range (nx1,nx2+1)] for y in range(ny1,ny2+1)])
+        np.savez_compressed("depth3.npz", depth = depth_arr)
+        print(depth_arr.shape)
+        print(np.count_nonzero(depth_arr == 0))
+        print(np.count_nonzero(depth_arr != 0))
         avg = np.mean(depth_arr[depth_arr!=0])
         flat_factor = abs(np.sum((depth_arr[depth_arr!=0]-avg)*abs(depth_arr[depth_arr!=0]-avg))/len(depth_arr[depth_arr!=0]))
-        print(flat_factor)
+        #print(flat_factor)
         return flat_factor > 1e-5
     except Exception as e:
+        print(e)
         return False
 
 def draw_boxes(color_img,depth_frame, objects, depth):
@@ -32,7 +40,7 @@ def draw_boxes(color_img,depth_frame, objects, depth):
         for obj in objects:
             x1,y1,x2,y2 = obj.bbox
             if depth:
-                if check_depth(x1,x2,y1,y2,depth_frame):
+                if check_depth(x1,x2,y1,y2,depth_frame, color_img):
                     cv2.rectangle(color_img, (x1,y1),(x2,y2),(0,0,255),2)
             else:
                 cv2.rectangle(color_img, (x1,y1),(x2,y2),(0,0,255),2)
@@ -50,8 +58,8 @@ interpreter_detect.allocate_tensors()
 pipeline = rs.pipeline()
 config = rs.config()
 
-WIDTH = 640
-HEIGHT = 480
+WIDTH = 1280
+HEIGHT = 720
 
 config.enable_stream(rs.stream.depth, WIDTH, HEIGHT, rs.format.z16, 30)
 #config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)

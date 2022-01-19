@@ -26,15 +26,18 @@ def check_depth(x1,x2,y1,y2,depth_frame):
     except Exception as e:
         return False
 
-def draw_boxes(color_img,depth_frame, objects, depth):
+def draw_boxes(color_img,depth_frame, objects, depth, ptu):
+
     if objects:
         for obj in objects:
             x1,y1,x2,y2 = obj.bbox
-            if depth:
-                if check_depth(x1,x2,y1,y2,depth_frame):
-                    cv2.rectangle(color_img, (x1,y1),(x2,y2),(0,0,255),2)
-            else:
-                cv2.rectangle(color_img, (x1,y1),(x2,y2),(0,0,255),2)
+            cv2.rectangle(color_img, (x1,y1),(x2,y2),colors[person],2)
+            ptu.track((x2+x1)/2, (y2+y1)/2)
+            #if depth:
+            #    if check_depth(x1,x2,y1,y2,depth_frame):
+            #        cv2.rectangle(color_img, (x1,y1),(x2,y2),(0,0,255),2)
+            #else:
+                
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('--depth',type=bool,default=True,help='Use depth when detecting faces')
@@ -50,10 +53,10 @@ interpreter.allocate_tensors()
 pipeline = rs.pipeline()
 config = rs.config()
 
-WIDTH = 640
-HEIGHT = 480
+WIDTH = 1280
+HEIGHT = 720
 
-config.enable_stream(rs.stream.depth, WIDTH, HEIGHT, rs.format.z16, 30)
+config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
 config.enable_stream(rs.stream.color, WIDTH, HEIGHT, rs.format.bgr8, 30)
 
 
@@ -65,13 +68,13 @@ align_to = rs.stream.color
 align = rs.align(align_to)
 
 ptu = PTUController(WIDTH,HEIGHT)
-
 try:
     while True:
 
         # Wait for a coherent pair of frames: depth and color
         frames = pipeline.wait_for_frames()
-        aligned_frames = align.process(frames)
+        #aligned_frames = align.process(frames)
+        aligned_frames = frames
 
         depth_frame = aligned_frames.get_depth_frame()
         color_frame = aligned_frames.get_color_frame()
@@ -80,21 +83,18 @@ try:
 
         color_image = np.asanyarray(color_frame.get_data())
 
-        _, scale = common.set_resized_input(interpreter, (640,480), lambda size: cv2.resize(color_image, size))
+        _, scale = common.set_resized_input(interpreter, (WIDTH,HEIGHT), lambda size: cv2.resize(color_image, size))
         interpreter.invoke()
         objects = detect.get_objects(interpreter, 0.5, scale)
         
-        draw_boxes(color_image,depth_frame, objects, args.depth)
+        draw_boxes(color_image,depth_frame, objects, args.depth, ptu, person)
         
-        if objects:
-            obj = objects[0]
-            x1,y1,x2,y2 = obj.bbox
-            ptu.track((x2+x1)/2, (y2+y1)/2)
+            
         
         # Show images
         cv2.namedWindow('RealSense', cv2.WINDOW_AUTOSIZE)
         cv2.imshow('RealSense', color_image)
-        if cv2.waitKey(20) & 0xFF == ord('q'):
+        if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
 finally:
