@@ -27,32 +27,27 @@ def check_depth(x1,x2,y1,y2,depth_frame):
     except Exception as e:
         return False
 
-def draw_boxes(color_img,depth_frame, objects, depth, embeds, recognition_model, person):
+def draw_boxes(color_img,depth_frame, objects, embeds, recognition_model):
     try:
         if objects:
             for obj in objects:
                 x1,y1,x2,y2 = obj.bbox
                 w = x2-x1; h = y2-y1
                 face = color_img[y1+h//5:y2-h//5,x1+w//5:x2-w//5]
-                #face = color_img
-                #mean, std = np.mean(face), np.std(face)
-                #face = (face-mean)/std
-                #face = face.astype("float32")
-                face = cv2.resize(face, (160,160))
-                
-                sample = face
+                sample = cv2.resize(face, (160,160))
                 common.set_input(recognition_model, sample)
                 recognition_model.invoke()
                 embed = common.output_tensor(recognition_model, 0)[0]
                 diff = [np.linalg.norm(embed-em, ord=2) for em in embeds]
-                #print(diff)
-                #print(embed)
-                #cv2.imwrite("test.png", color_image)
-                if depth:
-                    if check_depth(x1,x2,y1,y2,depth_frame):
-                        cv2.rectangle(color_img, (x1,y1),(x2,y2),(0,0,255),2)
-                else:
+                people = {0: "piechowski", 1: "hadrysiak"}
+                if np.any(diff<3300):
+                    idx = diff.index(min(diff))
                     cv2.rectangle(color_img, (x1,y1),(x2,y2),(0,255,0),2)
+                    cv2.putText(color_img, f"{people[idx]}", (x1,y1-10), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0,255,0), 1)
+                else:
+                    cv2.rectangle(color_img, (x1,y1),(x2,y2),(0,0,255),2)
+                    cv2.putText(color_img, "unknown", (x1,y1-10), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0,0,255), 1)
+
     except Exception as e:
         print("error")
 
@@ -63,8 +58,6 @@ args = parser.parse_args()
 with np.load("embeddings.npz") as data:
     piechowski, hadrysiak = data["embed_piech"], data["embed_hadr"]
 embeds = [piechowski, hadrysiak]
-#print(np.linalg.norm(embed_michal-embed_milosz))
-#create the model
 interpreter_detect = make_interpreter("models/ssd_mobilenet_v2_face_quant_postprocess_edgetpu.tflite")
 interpreter_detect.allocate_tensors()
 

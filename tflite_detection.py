@@ -19,17 +19,9 @@ def check_depth(x1,x2,y1,y2,depth_frame, color_img):
         ny1 = y1+h//4
         nx2 = x2-w//4
         ny2 = y2-h//4
-        cv2.rectangle(color_img, (nx1,ny1),(nx2,ny2),(0,0,255),2)
-        cv2.rectangle(color_img, (x1,y1),(x2,y2),(0,0,255),2)
-        cv2.imwrite("depth3.png",color_img)
         depth_arr = np.array([[depth_frame.get_distance(x,y) for x in range (nx1,nx2+1)] for y in range(ny1,ny2+1)])
-        np.savez_compressed("depth3.npz", depth = depth_arr)
-        print(depth_arr.shape)
-        print(np.count_nonzero(depth_arr == 0))
-        print(np.count_nonzero(depth_arr != 0))
         avg = np.mean(depth_arr[depth_arr!=0])
         flat_factor = abs(np.sum((depth_arr[depth_arr!=0]-avg)*abs(depth_arr[depth_arr!=0]-avg))/len(depth_arr[depth_arr!=0]))
-        #print(flat_factor)
         return flat_factor > 1e-5
     except Exception as e:
         print(e)
